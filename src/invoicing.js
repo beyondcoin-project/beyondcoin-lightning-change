@@ -1,6 +1,6 @@
 import wrap from './lib/promise-wrap'
 
-const debug = require('debug')('lightning-charge')
+const debug = require('debug')('beyondcoin-lightning-charge')
 
 // maximum wait time for long-polling
 const maxWait = +process.env.MAX_WAIT || 600

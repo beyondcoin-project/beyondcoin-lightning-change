@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events'
 import { LightningClient } from 'clightning-client'
 
-const debug = require('debug')('lightning-charge')
+const debug = require('debug')('beyondcoin-lightning-charge')
 
 class PaymentListener extends EventEmitter {
   constructor(rpcPath, model) {

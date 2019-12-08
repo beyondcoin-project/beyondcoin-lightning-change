@@ -23,22 +23,22 @@ RUN [ -n "$STANDALONE" ] || \
     && rm -r target/share \
     && mv -f target/* /opt/local/)
 
-ENV BITCOIN_VERSION 0.19.0.1
-ENV BITCOIN_FILENAME bitcoin-$BITCOIN_VERSION-x86_64-linux-gnu.tar.gz
-ENV BITCOIN_URL https://bitcoincore.org/bin/bitcoin-core-$BITCOIN_VERSION/$BITCOIN_FILENAME
-ENV BITCOIN_SHA256 732cc96ae2e5e25603edf76b8c8af976fe518dd925f7e674710c6c8ee5189204
-ENV BITCOIN_ASC_URL https://bitcoincore.org/bin/bitcoin-core-$BITCOIN_VERSION/SHA256SUMS.asc
-ENV BITCOIN_PGP_KEY 01EA5486DE18A882D4C2684590C8019E36C2E964
+ENV BEYONDCOIN_VERSION 0.16.3
+ENV BEYONDCOIN_FILENAME beyondcoin-$BEYONDCOIN_VERSION-x86_64-linux-gnu.tar.gz
+ENV BEYONDCOIN_URL https://beyondcoin.io/bin/beyondcoin-core-$BEYONDCOIN_VERSION/$BEYONDCOIN_FILENAME
+ENV BEYONDCOIN_SHA256 732cc96ae2e5e25603edf76b8c8af976fe518dd925f7e674710c6c8ee5189204
+ENV BEYONDCOIN_ASC_URL https://beyondcoin.io/bin/beyondcoin-core-$BEYONDCOIN_VERSION/SHA256SUMS.asc
+ENV BEYONDCOIN_PGP_KEY 01EA5486DE18A882D4C2684590C8019E36C2E964
 RUN [ -n "$STANDALONE" ] || \
-    (mkdir /opt/bitcoin && cd /opt/bitcoin \
-    && wget -qO "$BITCOIN_FILENAME" "$BITCOIN_URL" \
-    && echo "$BITCOIN_SHA256 $BITCOIN_FILENAME" | sha256sum -c - \
-    && gpg --keyserver keyserver.ubuntu.com --recv-keys "$BITCOIN_PGP_KEY" \
-    && wget -qO bitcoin.asc "$BITCOIN_ASC_URL" \
-    && gpg --verify bitcoin.asc \
-    && cat bitcoin.asc | grep "$BITCOIN_FILENAME" | sha256sum -c - \
-    && BD=bitcoin-$BITCOIN_VERSION/bin \
-    && tar -xzvf "$BITCOIN_FILENAME" $BD/bitcoind $BD/bitcoin-cli --strip-components=1 \
+    (mkdir /opt/beyondcoin && cd /opt/beyondcoin \
+    && wget -qO "$BEYONDCOIN_FILENAME" "$BEYONDCOIN_URL" \
+    && echo "$BEYONDCOIN_SHA256 $BEYONDCOIN_FILENAME" | sha256sum -c - \
+    && gpg --keyserver keyserver.ubuntu.com --recv-keys "$BEYONDCOIN_PGP_KEY" \
+    && wget -qO beyondcoin.asc "$BEYONDCOIN_ASC_URL" \
+    && gpg --verify beyondcoin.asc \
+    && cat beyondcoin.asc | grep "$BEYONDCOIN_FILENAME" | sha256sum -c - \
+    && BD=beyondcoin-$BEYONDCOIN_VERSION/bin \
+    && tar -xzvf "$BEYONDCOIN_FILENAME" $BD/beyondcoind $BD/beyondcoin-cli --strip-components=1 \
     && mv bin/* /opt/local/bin/)
 
 WORKDIR /opt/charged

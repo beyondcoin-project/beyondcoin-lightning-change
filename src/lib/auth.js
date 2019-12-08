@@ -16,7 +16,7 @@ export const getToken = (apiToken, cookieFile) => {
   return apiToken
 }
 
-export const authMiddleware = (name, pass, realm='Lightning Charge') => (req, res, next) => {
+export const authMiddleware = (name, pass, realm='Beyondcoin Lightning Charge') => (req, res, next) => {
   const cred = basicAuth(req)
 
   if (!cred || cred.name !== name || cred.pass !== pass)

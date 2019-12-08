@@ -3,13 +3,13 @@ source test/prelude.sh
 
 cat <<EOL
 
-You can access bitcoind and lightningd via:
+You can access beyondcoind and lightningd via:
 
-  $ bitcoin-cli --datadir=$BTC_DIR
+  $ beyondcoin-cli --datadir=$BYND_DIR
   $ lightning-cli --lightning-dir=$LN_ALICE_PATH
   $ lightning-cli --lightning-dir=$LN_BOB_PATH
 
-Lightning Charge is available at:
+Beyondcoin Lightning Charge is available at:
 
   $CHARGE_URL
 

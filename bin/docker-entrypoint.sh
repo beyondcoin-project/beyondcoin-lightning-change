@@ -4,11 +4,11 @@ trap 'kill `jobs -p`' SIGTERM
 
 : ${NETWORK:=testnet}
 : ${LIGHTNINGD_OPT:=--log-level=debug}
-: ${BITCOIND_OPT:=-debug=rpc --printtoconsole=0}
+: ${BEYONDCOIND_OPT:=-debug=rpc --printtoconsole=0}
 
-[[ "$NETWORK" == "mainnet" ]] && NETWORK=bitcoin
+[[ "$NETWORK" == "mainnet" ]] && NETWORK=beyondcoin
 
-[[ "$NETWORK" != "bitcoin" ]] && NETWORK_ARG="-$NETWORK"
+[[ "$NETWORK" != "beyondcoin" ]] && NETWORK_ARG="-$NETWORK"
 
 if [ -d /etc/lightning ]; then
   echo -n "Using lightningd directory mounted in /etc/lightning... "
@@ -16,42 +16,42 @@ if [ -d /etc/lightning ]; then
 
 else
 
-  # Setup bitcoind (only needed when we're starting our own lightningd instance)
-  if [ -d /etc/bitcoin ]; then
-    echo -n "Connecting to bitcoind configured in /etc/bitcoin... "
+  # Setup beyondcoind (only needed when we're starting our own lightningd instance)
+  if [ -d /etc/beyondcoin ]; then
+    echo -n "Connecting to beyondcoind configured in /etc/beyondcoin... "
 
-    RPC_OPT="-datadir=/etc/bitcoin $([[ -z "$BITCOIND_RPCCONNECT" ]] || echo "-rpcconnect=$BITCOIND_RPCCONNECT")"
+    RPC_OPT="-datadir=/etc/beyondcoin $([[ -z "$BEYONDCOIND_RPCCONNECT" ]] || echo "-rpcconnect=$BEYONDCOIND_RPCCONNECT")"
 
-  elif [ -n "$BITCOIND_URI" ]; then
-    [[ "$BITCOIND_URI" =~ ^[a-z]+:\/+(([^:/]+):([^@/]+))@([^:/]+:[0-9]+)/?$ ]] || \
-      { echo >&2 "ERROR: invalid bitcoind URI: $BITCOIND_URI"; exit 1; }
+  elif [ -n "$BEYONDCOIND_URI" ]; then
+    [[ "$BEYONDCOIND_URI" =~ ^[a-z]+:\/+(([^:/]+):([^@/]+))@([^:/]+:[0-9]+)/?$ ]] || \
+      { echo >&2 "ERROR: invalid beyondcoind URI: $BEYONDCOIND_URI"; exit 1; }
 
-    echo -n "Connecting to bitcoind at ${BASH_REMATCH[4]}... "
+    echo -n "Connecting to beyondcoind at ${BASH_REMATCH[4]}... "
 
     RPC_OPT="-rpcconnect=${BASH_REMATCH[4]}"
 
     if [ "${BASH_REMATCH[2]}" != "__cookie__" ]; then
       RPC_OPT="$RPC_OPT -rpcuser=${BASH_REMATCH[2]} -rpcpassword=${BASH_REMATCH[3]}"
     else
-      RPC_OPT="$RPC_OPT -datadir=/tmp/bitcoin"
-      [[ "$NETWORK" == "bitcoin" ]] && NET_PATH=/tmp/bitcoin || NET_PATH=/tmp/bitcoin/$NETWORK
+      RPC_OPT="$RPC_OPT -datadir=/tmp/beyondcoin"
+      [[ "$NETWORK" == "beyondcoin" ]] && NET_PATH=/tmp/beyondcoin || NET_PATH=/tmp/beyondcoin/$NETWORK
       mkdir -p $NET_PATH
       echo "${BASH_REMATCH[1]}" > $NET_PATH/.cookie
     fi
 
   else
-    echo -n "Starting bitcoind... "
+    echo -n "Starting beyondcoind... "
 
-    mkdir -p /data/bitcoin
-    RPC_OPT="-datadir=/data/bitcoin"
+    mkdir -p /data/beyondcoin
+    RPC_OPT="-datadir=/data/beyondcoin"
 
-    bitcoind $NETWORK_ARG $RPC_OPT $BITCOIND_OPT &
+    beyondcoind $NETWORK_ARG $RPC_OPT $BEYONDCOIND_OPT &
     echo -n "waiting for cookie... "
-    sed --quiet '/^\.cookie$/ q' <(inotifywait -e create,moved_to --format '%f' -qmr /data/bitcoin)
+    sed --quiet '/^\.cookie$/ q' <(inotifywait -e create,moved_to --format '%f' -qmr /data/beyondcoin)
   fi
 
   echo -n "waiting for RPC... "
-  bitcoin-cli $NETWORK_ARG $RPC_OPT -rpcwait getblockchaininfo > /dev/null
+  beyondcoin-cli $NETWORK_ARG $RPC_OPT -rpcwait getblockchaininfo > /dev/null
   echo "ready."
 
   # Setup lightning
@@ -63,7 +63,7 @@ else
   lnopt=($LIGHTNINGD_OPT --network=$NETWORK --lightning-dir="$LN_PATH" --log-file=debug.log)
   [[ -z "$LN_ALIAS" ]] || lnopt+=(--alias="$LN_ALIAS")
 
-  lightningd "${lnopt[@]}" $(echo "$RPC_OPT" | sed -r 's/(^| )-/\1--bitcoin-/g') > /dev/null &
+  lightningd "${lnopt[@]}" $(echo "$RPC_OPT" | sed -r 's/(^| )-/\1--beyondcoin-/g') > /dev/null &
 fi
 
 if [ ! -S /etc/lightning/lightning-rpc ]; then
@@ -76,7 +76,7 @@ if command -v lightning-cli > /dev/null; then
   echo -n "c-lightning RPC ready."
 fi
 
-echo -e "\nStarting Lightning Charge"
+echo -e "\nStarting Beyondcoin Lightning Charge"
 
 if [ -z "$STANDALONE"  ]; then
     # when not in standalone mode, run spark-wallet as an additional background job

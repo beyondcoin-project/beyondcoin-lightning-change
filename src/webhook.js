@@ -3,7 +3,7 @@ import wrap from './lib/promise-wrap'
 
 require('superagent-proxy')(request)
 
-const debug = require('debug')('lightning-charge')
+const debug = require('debug')('beyondcoin-lightning-charge')
 
 // if none if set, will fallback to using HTTP(S)_PROXY or ALL_PROXY.
 // see https://github.com/Rob--W/proxy-from-env

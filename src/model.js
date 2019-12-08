@@ -1,7 +1,7 @@
 import nanoid from 'nanoid'
 import { toMsat } from './lib/exchange-rate'
 
-const debug  = require('debug')('lightning-charge')
+const debug  = require('debug')('beyondcoin-lightning-charge')
     , status = inv => inv.pay_index ? 'paid' : inv.expires_at > now() ? 'unpaid' : 'expired'
     , format = inv => ({ ...inv, status: status(inv), msatoshi: (inv.msatoshi || null), metadata: JSON.parse(inv.metadata) })
     , now    = _ => Date.now() / 1000 | 0
@@ -12,7 +12,7 @@ const debug  = require('debug')('lightning-charge')
 // (requires creating a new table, copying over the data and replacing the old one).
 // This will eventually be done in a future release.
 
-const defaultDesc = process.env.INVOICE_DESC_DEFAULT || 'Lightning Charge Invoice'
+const defaultDesc = process.env.INVOICE_DESC_DEFAULT || 'Beyondcoin Lightning Charge Invoice'
 
 module.exports = (db, ln) => {
   const newInvoice = async props => {

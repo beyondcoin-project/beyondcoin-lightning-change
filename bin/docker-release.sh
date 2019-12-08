@@ -1,7 +1,7 @@
 #!/bin/bash
 set -xeo pipefail
 
-docker_name=shesek/lightning-charge
+docker_name=beyondcoin-project/beyondcoin-lightning-charge
 version=`node -p 'require("./package").version'`
 
 export DOCKER_CLI_EXPERIMENTAL=enabled
