@@ -4,7 +4,7 @@ shopt -s expand_aliases
 
 # check dependencies
 command -v jq > /dev/null || { echo >&2 "jq is required. see https://stedolan.github.io/jq/download/"; exit 1; }
-(command -v bitcoind && command -v bitcoin-cli) > /dev/null || { echo >&2 "bitcoind and bitcoin-cli must be in PATH. to install, see https://bitcoin.org/en/full-node#linux-instructions"; exit 1; }
+(command -v beyondcoind && command -v beyondcoin-cli) > /dev/null || { echo >&2 "beyondcoind and beyondcoin-cli must be in PATH. to install, see https://bitcoin.org/en/full-node#linux-instructions"; exit 1; }
 (command -v lightningd && command -v lightning-cli) > /dev/null || { echo >&2 "lightningd and lightning-cli must be in PATH. to install, see https://github.com/ElementsProject/lightning/blob/master/README.md#getting-started"; exit 1; }
 
 trap 'pkill -P $CHARGE_PID && kill `jobs -p` 2> /dev/null' SIGTERM
@@ -18,7 +18,7 @@ else
 fi
 
 : ${DIR:=`mktemp -d`}
-BTC_DIR=$DIR/bitcoin
+BYND_DIR=$DIR/beyondcoin
 
 # Alice is the backend for Charge, Bob is paying customer
 LN_ALICE_PATH=$DIR/lightning-alice
@@ -29,17 +29,17 @@ CHARGE_PORT=`get-port`
 CHARGE_TOKEN=`head -c 10 /dev/urandom | base64 | tr -d '+/='`
 CHARGE_URL=http://api-token:$CHARGE_TOKEN@localhost:$CHARGE_PORT
 
-alias btc="bitcoin-cli --datadir=$BTC_DIR"
+alias bynd="beyondcoin-cli --datadir=$BYND_DIR"
 alias lna="lightning-cli --lightning-dir=$LN_ALICE_PATH"
 alias lnb="lightning-cli --lightning-dir=$LN_BOB_PATH"
 
 echo Setting up test envirnoment in $DIR
 
-# Setup bitcoind
+# Setup beyondcoind
 
-echo Setting up bitcoind >&2
-mkdir -p $BTC_DIR
-cat >$BTC_DIR/bitcoin.conf <<EOL
+echo Setting up beyondcoind >&2
+mkdir -p $BYND_DIR
+cat >$BYND_DIR/beyondcoin.conf <<EOL
 regtest=1
 printtoconsole=0
 
@@ -48,25 +48,25 @@ rpcport=`get-port`
 port=`get-port`
 EOL
 
-bitcoind -datadir=$BTC_DIR $BITCOIND_OPTS &
+beyondcoind -datadir=$BYND_DIR $BEYONDCOIND_OPTS &
 
-echo - Waiting for bitcoind to warm up... > $dbgout
+echo - Waiting for beyondcoind to warm up... > $dbgout
 command -v inotifywait > /dev/null \
-  && sed --quiet '/^\.cookie$/ q' <(inotifywait -e create,moved_to --format '%f' -qmr $BTC_DIR) \
+  && sed --quiet '/^\.cookie$/ q' <(inotifywait -e create,moved_to --format '%f' -qmr $BYND_DIR) \
   || sleep 2 # fallback to slower startup if inotifywait is not available
 
-btc -rpcwait getblockchaininfo > /dev/null
+bynd -rpcwait getblockchaininfo > /dev/null
 
-addr=`btc getnewaddress`
+addr=`bynd getnewaddress`
 
 echo - Generating some blocks... > $dbgout
-btc generatetoaddress 101 $addr > /dev/null
+bynd generatetoaddress 101 $addr > /dev/null
 
 # Setup lightningd
 
 echo Setting up lightningd >&2
 
-LN_OPTS="$LN_OPTS --network=regtest --dev-bitcoind-poll=1 --bitcoin-datadir=$BTC_DIR --log-level=debug --log-file=debug.log
+LN_OPTS="$LN_OPTS --network=regtest --dev-beyondcoind-poll=1 --beyondcoin-datadir=$BYND_DIR --log-level=debug --log-file=debug.log
   --allow-deprecated-apis="$([ -n "$ALLOW_DEPRECATED" ] && echo true || echo false)
 
 lightningd $LN_OPTS --addr=127.0.0.1:`get-port` --lightning-dir=$LN_ALICE_PATH  &> $dbgout &
@@ -77,8 +77,8 @@ sed $sedq "/Listening on 'lightning-rpc'/ q" <(tail -F -n+0 $LN_ALICE_PATH/debug
 sed $sedq "/Listening on 'lightning-rpc'/ q" <(tail -F -n+0 $LN_BOB_PATH/debug.log 2> /dev/null)
 
 echo - Funding lightning wallet... > $dbgout
-btc sendtoaddress $(lnb newaddr | jq -r '.bech32 // .address') 1 > $dbgout
-btc generatetoaddress 1 $addr > /dev/null
+bynd sendtoaddress $(lnb newaddr | jq -r '.bech32 // .address') 1 > $dbgout
+bynd generatetoaddress 1 $addr > /dev/null
 sed $sedq '/Owning output [0-9]/ q' <(tail -F -n+0 $LN_BOB_PATH/debug.log)
 
 echo - Connecting peers... > $dbgout
@@ -87,7 +87,7 @@ lnb connect $aliceid 127.0.0.1 `lna getinfo | jq -r .binding[0].port` | jq -c . 
 
 echo - Setting up channel... > $dbgout
 lnb fundchannel $aliceid 16777215 10000perkb | jq -c . > $dbgout
-btc generatetoaddress 1 $addr > /dev/null
+bynd generatetoaddress 1 $addr > /dev/null
 
 sed $sedq '/State changed from CHANNELD_AWAITING_LOCKIN to CHANNELD_NORMAL/ q' <(tail -f -n+0 $LN_ALICE_PATH/debug.log)
 sed $sedq '/State changed from CHANNELD_AWAITING_LOCKIN to CHANNELD_NORMAL/ q' <(tail -f -n+0 $LN_BOB_PATH/debug.log)

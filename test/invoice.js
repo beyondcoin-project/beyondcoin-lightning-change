@@ -54,9 +54,9 @@ describe('Invoice API', function() {
         .expect(r => ok(r.body.msatoshi == null))
     })
 
-    it('rounds amounts up to the nearest msatoshi', () =>
+    it('rounds amounts up to the nearest mBYND', () =>
       charge.post('/invoice')
-        .send({ currency: 'BTC', amount: '0.0000000000000001' })
+        .send({ currency: 'BYND', amount: '0.0000000000000001' })
         .expect(201)
         .expect(r => eq(r.body.msatoshi, 1))
     )
